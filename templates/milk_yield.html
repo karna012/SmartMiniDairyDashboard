@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Milk Yield Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% include "partials/dairy_theme.html" %}
+  </head>
+  <body class="dashboard-page bg-slate-900 text-slate-100">
+    <div class="min-h-screen px-4 py-6">
+      <header class="mb-6 rounded-3xl bg-slate-800/80 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Milk Yield Report</p>
+            <h1 class="text-3xl font-semibold text-white">{{ report.selected_label }}</h1>
+            <p class="mt-1 text-slate-300">{{ report.start_date }} to {{ report.end_date }}</p>
+          </div>
+          <div class="flex gap-3">
+            <a href="{{ base_path }}/" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Dashboard</a>
+            <a href="{{ base_path }}/admin" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Admin</a>
+          </div>
+          <div class="flex items-center gap-3 ml-4">
+            <label class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Theme</label>
+            <select id="themeSelect" class="rounded-lg border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-400">
+              <option value="charcoal">Degen Dark</option>
+              <option value="ivory">Light</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid gap-6">
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Quick Filters</p>
+              <div class="mt-3 flex flex-wrap gap-3">
+                {% for value, label in report.period_options %}
+                <a href="{{ base_path }}/milk-yield?period={{ value }}&group={{ report.group }}" class="rounded-2xl px-4 py-2 text-sm font-semibold {% if report.period == value %}btn-visible text-slate-950{% else %}btn-visible-soft text-slate-200{% endif %}">{{ label }}</a>
+                {% endfor %}
+              </div>
+            </div>
+            <form action="{{ base_path }}/milk-yield" method="get" class="rounded-3xl bg-slate-950/80 p-4">
+              <input type="hidden" name="period" value="range" />
+              <input type="hidden" name="group" value="{{ report.group }}" />
+              <div class="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                <label class="block text-sm text-slate-200">
+                  From
+                  <input name="start" type="date" value="{{ report.start_date }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  To
+                  <input name="end" type="date" value="{{ report.end_date }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <button class="btn-visible self-end rounded-2xl px-4 py-3 font-semibold text-slate-950" type="submit">Apply</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <a href="{{ base_path }}/milk-yield?period={{ report.period }}&group=milked&start={{ report.start_date }}&end={{ report.end_date }}" class="rounded-3xl bg-slate-950/80 p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Gave Milk</p>
+              <p class="mt-3 text-4xl font-semibold text-cyan-300">{{ report.milked_count }}</p>
+              <p class="mt-2 text-slate-300">out of {{ report.total_cows }} cows</p>
+            </a>
+            <a href="{{ base_path }}/milk-yield?period={{ report.period }}&group=not_milked&start={{ report.start_date }}&end={{ report.end_date }}" class="rounded-3xl bg-slate-950/80 p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Not Milked</p>
+              <p class="mt-3 text-4xl font-semibold text-amber-300">{{ report.not_milked_count }}</p>
+              <p class="mt-2 text-slate-300">includes dry or pending cows</p>
+            </a>
+            <a href="{{ base_path }}/milk-yield?period={{ report.period }}&group=all&start={{ report.start_date }}&end={{ report.end_date }}" class="rounded-3xl bg-slate-950/80 p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Total Yield</p>
+              <p class="mt-3 text-4xl font-semibold text-white">{{ "%.2f"|format(report.total_yield) }} L</p>
+              <p class="mt-2 text-slate-300">all milked cows</p>
+            </a>
+            {% for status, count in report.status_counts.items() %}
+            <a href="{{ base_path }}/milk-yield?period={{ report.period }}&group=status:{{ status }}&start={{ report.start_date }}&end={{ report.end_date }}" class="rounded-3xl bg-slate-950/80 p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">{{ status }}</p>
+              <p class="mt-3 text-4xl font-semibold text-white">{{ count }}</p>
+              <p class="mt-2 text-slate-300">status group</p>
+            </a>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4">
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">{{ report.selected_label }}</p>
+            <h2 class="text-2xl font-semibold text-white">Cow Milk Quantity</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-700 text-left text-sm text-slate-200">
+              <thead class="bg-slate-900 text-slate-300">
+                <tr>
+                  <th class="px-4 py-3">Cow</th>
+                  <th class="px-4 py-3">Name</th>
+                  <th class="px-4 py-3">Breed</th>
+                  <th class="px-4 py-3">Age</th>
+                  <th class="px-4 py-3">Weight</th>
+                  <th class="px-4 py-3">Status</th>
+                  <th class="px-4 py-3">Sessions</th>
+                  <th class="px-4 py-3">Milk Qty</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700 bg-slate-950/80">
+                {% for row in report.rows %}
+                <tr>
+                  <td class="px-4 py-3">
+                    <a href="{{ base_path }}/cows/{{ row.ear_tag }}" class="text-cyan-300 hover:text-cyan-100">{{ row.visual_id }}</a>
+                  </td>
+                  <td class="px-4 py-3">{{ row.cow_name }}</td>
+                  <td class="px-4 py-3">{{ row.breed }}</td>
+                  <td class="px-4 py-3">{% if row.age_years is not none %}{{ "%.1f"|format(row.age_years) }} yr{% else %}-{% endif %}</td>
+                  <td class="px-4 py-3">{% if row.weight_kg is not none %}{{ "%.1f"|format(row.weight_kg) }} kg{% else %}-{% endif %}</td>
+                  <td class="px-4 py-3">{{ row.status }}</td>
+                  <td class="px-4 py-3">{{ row.session_count }}</td>
+                  <td class="px-4 py-3 font-semibold text-cyan-300">{{ "%.2f"|format(row.total_yield) }} L</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td class="px-4 py-3 text-slate-400" colspan="8">No cows found for this filter.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
+
+

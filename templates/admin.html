@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Mini-Dairy Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% include "partials/dairy_theme.html" %}
+  </head>
+  <body class="admin-page bg-slate-900 text-slate-100">
+    <div class="min-h-screen px-4 py-6">
+      <header class="mb-6 rounded-3xl bg-slate-800/80 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur">
+        <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">Admin Controls</p>
+            <h1 class="text-3xl font-semibold text-white">Data Import & Customization</h1>
+          </div>
+          <div class="flex items-center gap-3">
+            <a href="{{ base_path }}/" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Back to Dashboard</a>
+            <a href="{{ base_path }}/inventory-history" class="btn-visible rounded-full px-4 py-2 text-sm">Inventory History</a>
+            <a href="{{ base_path }}/logout" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Logout</a>
+          </div>
+          <div class="flex items-center gap-3 ml-4">
+            <label class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Theme</label>
+            <select id="themeSelect" class="rounded-lg border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-400">
+              <option value="charcoal">Degen Dark</option>
+              <option value="ivory">Light</option>
+            </select>
+          </div>
+        </div>
+      </header>
+      {% if message %}
+      <div class="mb-6 rounded-3xl border border-amber-500/30 bg-slate-950/80 p-4 text-amber-200">
+        {{ message }}
+      </div>
+      {% endif %}
+
+      <main class="grid gap-6 lg:grid-cols-2">
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20 lg:col-span-2">
+          <h2 class="mb-4 text-2xl font-semibold text-white">Dashboard Data Controls</h2>
+          <div class="grid gap-3 md:grid-cols-3">
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Station Cards</p>
+              <p class="mt-2 text-slate-300">Use Live Station Data to update cow name, yield, temperature, station status, and milk totals.</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Feed Growing Centre Output</p>
+              <p class="mt-2 text-slate-300">Use Feed Centre Output at serving time to update dispatched, used, stock, remaining, and feed suggestions.</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Herd Status Feed</p>
+              <p class="mt-2 text-slate-300">Use Add / Update Cow and Operating Parameters to update breed, status, photos, targets, and the 24-cow overview.</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Cow Drinking Water</p>
+              <p class="mt-2 text-slate-300">Use Water Intake to track liters consumed per cow and update the herd water baseline progress.</p>
+            </div>
+          </div>
+          <form action="{{ base_path }}/admin/clear-database" method="post" class="mt-6 rounded-3xl border border-rose-500/30 bg-rose-950/20 p-5">
+            <div class="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+              <div>
+                <h3 class="text-lg font-semibold text-white">Clear Database for Testing</h3>
+                <p class="mt-1 text-sm text-rose-100">Deletes all cows, stations, milk logs, feed records, water records, inventory, uploads, and master data. Default operating parameters are restored after clearing.</p>
+                <label class="mt-4 block text-sm font-medium text-rose-100">
+                  Type CLEAR to confirm
+                  <input name="confirmation" type="text" autocomplete="off" class="mt-1 w-full rounded-2xl border border-rose-500/40 bg-slate-950 px-3 py-3 text-slate-100" />
+                </label>
+              </div>
+              <button class="rounded-2xl border border-rose-300 bg-rose-200 px-4 py-3 text-sm font-semibold text-rose-950 transition hover:bg-rose-100" type="submit">Clear DB</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <h2 class="mb-4 text-2xl font-semibold text-white">Upload Data</h2>
+          <p class="mb-4 text-slate-300">Use CSV or XLSX files to add or update cows, stations, feed types, and feed inventory.</p>
+          <div class="mb-6 rounded-3xl border border-slate-700 bg-slate-950/80 p-4 text-slate-200">
+            <p class="mb-3 text-sm uppercase tracking-[0.3em] text-slate-500">Download sample templates</p>
+            <div class="grid gap-3 sm:grid-cols-2">
+              <a href="{{ base_path }}/static/samples/cow_template.csv" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Cow Template CSV</a>
+              <a href="{{ base_path }}/static/samples/cow_template.xlsx" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Cow Template XLSX</a>
+              <a href="{{ base_path }}/static/samples/station_template.csv" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Station Template CSV</a>
+              <a href="{{ base_path }}/static/samples/station_template.xlsx" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Station Template XLSX</a>
+              <a href="{{ base_path }}/static/samples/feed_types_template.csv" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Feed Types CSV</a>
+              <a href="{{ base_path }}/static/samples/feed_types_template.xlsx" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Feed Types XLSX</a>
+              <a href="{{ base_path }}/static/samples/feed_inventory_template.csv" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Feed Inventory CSV</a>
+              <a href="{{ base_path }}/static/samples/feed_inventory_template.xlsx" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Feed Inventory XLSX</a>
+              <a href="{{ base_path }}/static/samples/feed_session_template.csv" class="rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-center text-slate-950 transition hover:bg-slate-200">Feed Session CSV</a>
+            </div>
+          </div>
+          <div class="space-y-6">
+            <form action="{{ base_path }}/admin/upload" method="post" enctype="multipart/form-data" class="rounded-3xl bg-slate-950/80 p-6">
+              <input type="hidden" name="entity" value="cows" />
+              <h3 class="mb-3 text-lg font-semibold text-white">Import Cow Records</h3>
+              <p class="mb-3 text-slate-400">Required columns: <code>EarTagRFID, VisualID, Breed, Status</code>. Optional: <code>CowName, AgeYears, WeightKg, PhotoURL, Delete</code>. Use <code>Delete=TRUE</code> to remove a cow and its logs.</p>
+              <input type="file" name="upload_file" accept=".csv,.xlsx" class="mb-3 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+              <button class="btn-visible rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Upload Cows</button>
+            </form>
+
+            <form action="{{ base_path }}/admin/upload" method="post" enctype="multipart/form-data" class="rounded-3xl bg-slate-950/80 p-6">
+              <input type="hidden" name="entity" value="stations" />
+              <h3 class="mb-3 text-lg font-semibold text-white">Import Station List</h3>
+              <p class="mb-3 text-slate-400">Required columns: <code>StationID, Label</code>.</p>
+              <input type="file" name="upload_file" accept=".csv,.xlsx" class="mb-3 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+              <button class="btn-visible rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Upload Stations</button>
+            </form>
+
+
+            <form action="{{ base_path }}/admin/upload" method="post" enctype="multipart/form-data" class="rounded-3xl bg-slate-950/80 p-6">
+              <input type="hidden" name="entity" value="feed_types" />
+              <h3 class="mb-3 text-lg font-semibold text-white">Import Feed Types</h3>
+              <p class="mb-3 text-slate-400">Required column: <code>Name</code>.</p>
+              <input type="file" name="upload_file" accept=".csv,.xlsx" class="mb-3 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+              <button class="btn-visible rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Upload Feed Types</button>
+            </form>
+
+            <form action="{{ base_path }}/admin/upload" method="post" enctype="multipart/form-data" class="rounded-3xl bg-slate-950/80 p-6">
+              <input type="hidden" name="entity" value="feed_inventory" />
+              <h3 class="mb-3 text-lg font-semibold text-white">Import Feed Inventory</h3>
+              <p class="mb-3 text-slate-400">Required columns: <code>FeedType, AvailableKg</code>. Optional: <code>LastUpdated, Note</code>.</p>
+              <input type="file" name="upload_file" accept=".csv,.xlsx" class="mb-3 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+              <button class="btn-visible rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Upload Feed Inventory</button>
+            </form>
+
+            <form action="{{ base_path }}/admin/feed-upload" method="post" enctype="multipart/form-data" class="rounded-3xl bg-slate-950/80 p-6">
+              <h3 class="mb-3 text-lg font-semibold text-white">Import Feed Sessions</h3>
+              <p class="mb-3 text-slate-400">Required columns: <code>EarTagRFID, Timestamp, GreenFodderKg, ConcentrateFeedKg</code>. Valid rows commit atomically; failed rows move to Data Verification.</p>
+              <input type="file" name="upload_file" accept=".csv,.txt,.xlsx" class="mb-3 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+              <button class="btn-visible rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Validate & Upload Feed Sessions</button>
+            </form>
+
+            <form action="{{ base_path }}/admin/live-station-json" method="post" enctype="multipart/form-data" class="rounded-3xl bg-slate-950/80 p-6">
+              <h3 class="mb-3 text-lg font-semibold text-white">Update Live Station From JSON</h3>
+              <p class="mb-3 text-slate-400">Accepts clean JSON or tracker text containing a JSON payload. Uses <code>WeightKg="Milking"</code> as live status; numeric <code>WeightKg</code> finalizes a milk log when the cow VisualID exists. Feed values in JSON are ignored.</p>
+              <input type="file" name="upload_file" accept=".json,.txt" class="mb-3 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+              <button class="btn-visible rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Update Live Stations</button>
+            </form>
+
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 class="text-2xl font-semibold text-white">Manual Entry</h2>
+              <p class="text-slate-300">Enter individual records directly without uploading a spreadsheet.</p>
+            </div>
+            {% if prefill_cow_ear_tag and prefill_action %}
+            <div class="rounded-3xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm text-emerald-200">
+              Prefilling <span class="font-semibold text-white">{{ prefill_action|title }}</span> for
+              <span class="font-semibold text-white">{{ prefill_cow_visual_id or prefill_cow_ear_tag }}</span>
+            </div>
+            {% endif %}
+          </div>
+          <div class="mb-6 rounded-3xl border border-slate-700 bg-slate-950/80 p-4 text-slate-200">
+            <div class="flex items-center justify-between gap-3">
+              <div>
+                <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Quick Cow Actions</p>
+                <p class="mt-1 text-slate-400">Select a cow to prefill manual entry forms.</p>
+              </div>
+              <a href="{{ base_path }}/admin" class="rounded-full border border-slate-300 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-slate-200">Clear selection</a>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+              <table class="min-w-full divide-y divide-slate-700 text-left text-sm text-slate-200">
+                <thead class="border-b border-slate-700 text-slate-500">
+                  <tr>
+                    <th class="px-3 py-2">Cow</th>
+                    <th class="px-3 py-2">RFID</th>
+                    <th class="px-3 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-700">
+                  {% for cow in cow_rows %}
+                  <tr>
+                    <td class="px-3 py-3">{{ cow.cow_name }}</td>
+                    <td class="px-3 py-3 font-mono text-slate-300">{{ cow.ear_tag }}</td>
+                    <td class="px-3 py-3 space-x-2">
+                      <a href="{{ base_path }}/admin?cow={{ cow.ear_tag|urlencode }}&visual_id={{ cow.visual_id|urlencode }}&action=edit#cow-entry" class="btn-visible-soft rounded-2xl px-3 py-2 text-xs font-semibold">Edit Cow</a>
+                      <a href="{{ base_path }}/admin?cow={{ cow.ear_tag|urlencode }}&visual_id={{ cow.visual_id|urlencode }}&action=feed#feed-output" class="btn-visible rounded-2xl px-3 py-2 text-xs font-semibold">Feed Cow Now</a>
+                      <a href="{{ base_path }}/admin?cow={{ cow.ear_tag|urlencode }}&visual_id={{ cow.visual_id|urlencode }}&action=drink#water-intake" class="btn-visible rounded-2xl px-3 py-2 text-xs font-semibold">Drink Water</a>
+                      <a href="{{ base_path }}/admin?cow={{ cow.ear_tag|urlencode }}&visual_id={{ cow.visual_id|urlencode }}&action=delete#cow-entry" class="btn-danger rounded-2xl px-3 py-2 text-xs font-semibold">Delete Cow</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div class="space-y-6">
+            <form action="{{ base_path }}/admin/station-log" method="post" class="rounded-3xl bg-slate-950/80 p-6">
+              <h3 class="mb-3 text-lg font-semibold text-white">Live Station Data</h3>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="block text-sm text-slate-200">
+                  EarTagRFID
+                  <input list="cowOptions" name="EarTagRFID" type="text" inputmode="numeric" minlength="15" maxlength="15" pattern="[0-9]{15}" placeholder="100000000000001" value="{{ prefill_cow_ear_tag }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Cow Name
+                  <input id="stationCowName" name="CowName" type="text" placeholder="Lakshmi" value="{{ prefill_cow_visual_id }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  StationID
+                  <input list="stationOptions" name="StationID" type="number" min="1" step="1" placeholder="1" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Body Temp (C)
+                  <input name="BodyTemperatureCelsius" type="number" min="1" step="0.1" placeholder="38.6" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Milk Yield (kg)
+                  <input name="YieldKg" type="number" min="0" step="0.1" placeholder="8.5" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Sensor Weight (kg)
+                  <input name="WeightSensorKg" type="number" min="0" step="0.1" placeholder="Optional" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+              </div>
+              <button class="btn-visible mt-4 rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Record Station Data</button>
+            </form>
+
+            <form id="feed-output" action="{{ base_path }}/admin/feed-output" method="post" class="rounded-3xl bg-slate-950/80 p-6">
+              <h3 class="mb-3 text-lg font-semibold text-white">Feed Centre Output</h3>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="block text-sm text-slate-200">
+                  Cow RFID
+                  <input list="cowOptions" name="RFIDTag" type="text" inputmode="numeric" minlength="15" maxlength="15" pattern="[0-9]{15}" placeholder="100000000000001" value="{{ prefill_cow_ear_tag }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Dispatch Date
+                  <input name="DispatchDate" type="date" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <div class="sm:col-span-2">
+                  <p class="mb-2 text-sm font-medium text-slate-200">Feed Items</p>
+                  <div class="grid gap-3">
+                    {% for feed_type in feed_types %}
+                    <div class="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 p-3 sm:grid-cols-2">
+                      <div class="block text-sm text-slate-200">
+                        FeedType
+                        <input type="hidden" name="FeedType" value="{{ feed_type }}" />
+                        <div class="mt-1 min-h-[3rem] rounded-2xl border border-slate-700 bg-slate-950 px-3 py-3 font-medium text-slate-100">{{ feed_type }}</div>
+                      </div>
+                      <label class="block text-sm text-slate-200">
+                        Quantity (kg)
+                        <input name="AllocatedAmountKg" type="number" min="0.1" step="0.1" placeholder="12.5" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-3 text-slate-200" />
+                      </label>
+                    </div>
+                    {% endfor %}
+                    {% if not feed_types %}
+                    <div class="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-3 text-sm text-amber-100">
+                      Add feed types first, then return here to record quantities.
+                    </div>
+                    {% endif %}
+                  </div>
+                  <div class="mt-4">
+                    <div id="alternateFeedRows" class="grid gap-3"></div>
+                    <button id="addAlternateFeed" class="btn-visible-soft mt-3 rounded-2xl px-4 py-2 text-sm font-semibold" type="button">Add Alternate Feed</button>
+                  </div>
+                </div>
+                <label class="block text-sm text-slate-200 sm:col-span-2">
+                  Note
+                  <input name="Note" type="text" placeholder="Manual feed centre output" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200 sm:col-span-2">
+                  Correction Reason
+                  <input name="CorrectionReason" type="text" placeholder="Only needed to correct feed within 30 minutes" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200 sm:col-span-2">
+                  Admin Password for Correction
+                  <input name="CorrectionPassword" type="password" placeholder="Required with correction reason" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+              </div>
+              <button class="btn-visible mt-4 rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Record Feed Output</button>
+            </form>
+
+            <form id="water-intake" action="{{ base_path }}/admin/water-intake" method="post" class="rounded-3xl bg-slate-950/80 p-6">
+              <h3 class="mb-3 text-lg font-semibold text-white">Water Intake</h3>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="block text-sm text-slate-200">
+                  Cow RFID
+                  <input list="cowOptions" name="EarTagRFID" type="text" inputmode="numeric" minlength="15" maxlength="15" pattern="[0-9]{15}" placeholder="100000000000001" value="{{ prefill_cow_ear_tag }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Water Drunk (L)
+                  <input name="WaterLiters" type="number" min="0.1" step="0.1" placeholder="35.0" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Intake Date
+                  <input name="IntakeDate" type="date" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Source
+                  <input name="Source" type="text" placeholder="Trough 1" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200 sm:col-span-2">
+                  Note
+                  <input name="Note" type="text" placeholder="Morning water check" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+              </div>
+              <button class="btn-visible mt-4 rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Record Water Intake</button>
+            </form>
+
+            <form id="cow-entry" action="{{ base_path }}/admin/entry" method="post" class="rounded-3xl bg-slate-950/80 p-6">
+              <input type="hidden" name="entity" value="cows" />
+              <h3 class="mb-3 text-lg font-semibold text-white">Add / Update Cow</h3>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="block text-sm text-slate-200">
+                  EarTagRFID
+                  <input list="cowOptions" name="EarTagRFID" type="text" inputmode="numeric" minlength="15" maxlength="15" pattern="[0-9]{15}" placeholder="100000000000001" value="{{ selected_cow.ear_tag if selected_cow else prefill_cow_ear_tag }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  VisualID
+                  <input name="VisualID" type="text" placeholder="COW-01" value="{{ selected_cow.visual_id if selected_cow else prefill_cow_visual_id }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Cow Name
+                  <input name="CowName" type="text" placeholder="Lakshmi" value="{{ selected_cow.cow_name if selected_cow else '' }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Breed
+                  <select name="Breed" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200">
+                    {% if selected_cow and selected_cow.breed and selected_cow.breed not in breeds %}
+                    <option value="{{ selected_cow.breed }}" selected>{{ selected_cow.breed }}</option>
+                    {% endif %}
+                    <option value="">Select breed</option>
+                    {% for item in breeds %}
+                    <option value="{{ item }}" {% if selected_cow and selected_cow.breed == item %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                  </select>
+                  <datalist id="breedOptions">
+                    {% for item in breeds %}
+                    <option value="{{ item }}"></option>
+                    {% endfor %}
+                  </datalist>
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Status
+                  <select name="Status" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200">
+                    {% for item in statuses %}
+                    <option value="{{ item }}" {% if (selected_cow and selected_cow.status == item) or (not selected_cow and item == 'Active') %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                  </select>
+                  <datalist id="statusOptions">
+                    {% for item in statuses %}
+                    <option value="{{ item }}"></option>
+                    {% endfor %}
+                  </datalist>
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Age (years)
+                  <input name="AgeYears" type="number" min="0" step="0.1" placeholder="4.5" value="{% if selected_cow and selected_cow.age_years is not none %}{{ selected_cow.age_years }}{% endif %}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Weight (kg)
+                  <input name="WeightKg" type="number" min="0" step="0.1" placeholder="420" value="{% if selected_cow and selected_cow.weight_kg is not none %}{{ selected_cow.weight_kg }}{% endif %}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200 sm:col-span-2">
+                  PhotoURL (optional)
+                  <input name="PhotoURL" type="text" placeholder="/static/uploads/cow1.jpg" value="{{ selected_cow.photo_url if selected_cow else '' }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200 sm:col-span-2">
+                  Delete cow?
+                  <select name="Delete" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200">
+                    <option value="No" {% if prefill_action != 'delete' %}selected{% endif %}>No</option>
+                    <option value="Yes" {% if prefill_action == 'delete' %}selected{% endif %}>Yes</option>
+                  </select>
+                  <datalist id="deleteOptions">
+                    <option value="No"></option>
+                    <option value="Yes"></option>
+                    <option value="TRUE"></option>
+                  </datalist>
+                </label>
+              </div>
+              <button class="btn-visible mt-4 rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Save Cow</button>
+            </form>
+
+            <form action="{{ base_path }}/admin/entry" method="post" class="rounded-3xl bg-slate-950/80 p-6">
+              <input type="hidden" name="entity" value="stations" />
+              <h3 class="mb-3 text-lg font-semibold text-white">Add / Update Station</h3>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="block text-sm text-slate-200">
+                  StationID
+                  <input list="stationOptions" name="StationID" type="number" min="1" step="1" placeholder="1" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                  <datalist id="stationOptions">
+                    {% for item in stations %}
+                    <option value="{{ item }}"></option>
+                    {% endfor %}
+                  </datalist>
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Label
+                  <input name="Label" type="text" placeholder="Alpha" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+              </div>
+              <button class="btn-visible mt-4 rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Save Station</button>
+            </form>
+
+
+            <form action="{{ base_path }}/admin/entry" method="post" class="rounded-3xl bg-slate-950/80 p-6">
+              <input type="hidden" name="entity" value="feed_types" />
+              <h3 class="mb-3 text-lg font-semibold text-white">Add Feed Type</h3>
+              <label class="block text-sm text-slate-200">
+                Name
+                <input list="feedTypeOptions" name="Name" type="text" placeholder="Concentrate" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                <datalist id="feedTypeOptions">
+                  {% for item in feed_types %}
+                  <option value="{{ item }}"></option>
+                  {% endfor %}
+                </datalist>
+              </label>
+              <button class="btn-visible mt-4 rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Save Feed Type</button>
+            </form>
+
+            <form action="{{ base_path }}/admin/entry" method="post" class="rounded-3xl bg-slate-950/80 p-6">
+              <input type="hidden" name="entity" value="feed_inventory" />
+              <h3 class="mb-3 text-lg font-semibold text-white">Update Feed Inventory</h3>
+              <div class="grid gap-3 sm:grid-cols-2">
+                <label class="block text-sm text-slate-200">
+                  FeedType
+                  <input list="feedTypeOptions" name="FeedType" type="text" placeholder="Concentrate" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  AvailableKg
+                  <input name="AvailableKg" type="number" min="0" step="0.1" placeholder="120.5" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  LastUpdated
+                  <input name="LastUpdated" type="date" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  Note
+                  <input name="Note" type="text" placeholder="New delivery" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+              </div>
+              <button class="btn-visible mt-4 rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Save Feed Inventory</button>
+            </form>
+
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <h2 class="mb-4 text-2xl font-semibold text-white">Operating Parameters</h2>
+          <p class="mb-4 text-slate-300">These values drive dashboard targets, feed allocation, heat alerts, and station validation.</p>
+
+          <form action="{{ base_path }}/admin/entry" method="post" class="rounded-3xl bg-slate-950/80 p-6">
+            <input type="hidden" name="entity" value="parameters" />
+            <div class="grid gap-4 sm:grid-cols-2">
+              {% for parameter in parameter_rows %}
+              <label class="block text-sm text-slate-200">
+                {{ parameter.Label }}
+                <span class="text-slate-500">{% if parameter.Unit %}({{ parameter.Unit }}){% endif %}</span>
+                <input name="{{ parameter.Key }}" type="number" min="0" step="0.01" value="{{ parameter.Value }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                {% if parameter.Description %}
+                <span class="mt-1 block text-xs text-slate-500">{{ parameter.Description }}</span>
+                {% endif %}
+              </label>
+              {% endfor %}
+            </div>
+            <button class="btn-visible mt-4 rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Save Parameters</button>
+          </form>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <h2 class="mb-4 text-2xl font-semibold text-white">Quick Photo Upload</h2>
+          <p class="mb-4 text-slate-300">Upload a cow image and associate it with the cow record by EarTagRFID.</p>
+
+          <form action="{{ base_path }}/admin/upload-photo" method="post" enctype="multipart/form-data" class="rounded-3xl bg-slate-950/80 p-6 space-y-4">
+            <label class="block text-sm font-medium text-slate-200">Ear Tag RFID</label>
+            <input list="cowOptions" name="EarTagRFID" type="text" inputmode="numeric" minlength="15" maxlength="15" pattern="[0-9]{15}" placeholder="100000000000001" class="w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+            <label class="block text-sm font-medium text-slate-200">Photo File</label>
+            <input name="upload_file" type="file" accept="image/*" class="w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+            <button class="btn-visible rounded-2xl px-4 py-2 font-semibold text-slate-950" type="submit">Upload Photo</button>
+          </form>
+
+          <div class="mt-6 rounded-3xl border border-slate-700 bg-slate-950/80 p-6">
+            <p class="text-slate-400">Existing counts</p>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+              <div class="rounded-2xl bg-slate-900/80 p-4">
+                <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Cows</p>
+                <p class="mt-2 text-3xl font-semibold text-emerald-300">{{ cow_count }}</p>
+              </div>
+              <div class="rounded-2xl bg-slate-900/80 p-4">
+                <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Stations</p>
+                <p class="mt-2 text-3xl font-semibold text-cyan-300">{{ station_count }}</p>
+              </div>
+              <div class="rounded-2xl bg-slate-900/80 p-4">
+                <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Breeds</p>
+                <p class="mt-2 text-3xl font-semibold text-emerald-300">{{ breed_count }}</p>
+              </div>
+              <div class="rounded-2xl bg-slate-900/80 p-4">
+                <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Feed Types</p>
+                <p class="mt-2 text-3xl font-semibold text-emerald-300">{{ feed_type_count }}</p>
+              </div>
+              <div class="rounded-2xl bg-slate-900/80 p-4">
+                <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Feed Inventory</p>
+                <p class="mt-2 text-3xl font-semibold text-cyan-300">{{ feed_inventory_count }}</p>
+              </div>
+              <div class="rounded-2xl bg-slate-900/80 p-4">
+                <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Water Logs</p>
+                <p class="mt-2 text-3xl font-semibold text-cyan-300">{{ water_log_count }}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+      <datalist id="cowOptions">
+        {% for cow in cow_options %}
+        <option
+          value="{{ cow.ear_tag }}"
+          data-visual-id="{{ cow.visual_id|e }}"
+          data-cow-name="{{ cow.cow_name|e }}"
+          data-breed="{{ cow.breed|e }}"
+          data-status="{{ cow.status|e }}"
+          data-age-years="{% if cow.age_years is not none %}{{ cow.age_years }}{% endif %}"
+          data-weight-kg="{% if cow.weight_kg is not none %}{{ cow.weight_kg }}{% endif %}"
+          data-photo-url="{{ cow.photo_url|e }}"
+        >{{ cow.visual_id }}</option>
+        {% endfor %}
+      </datalist>
+      <script>
+        const cowByRfid = {};
+        document.querySelectorAll("#cowOptions option").forEach((option) => {
+          cowByRfid[option.value] = {
+            visualId: option.dataset.visualId || "",
+            cowName: option.dataset.cowName || "",
+            breed: option.dataset.breed || "",
+            status: option.dataset.status || "",
+            ageYears: option.dataset.ageYears || "",
+            weightKg: option.dataset.weightKg || "",
+            photoUrl: option.dataset.photoUrl || "",
+          };
+        });
+        const stationRfidInput = document.querySelector('form[action="{{ base_path }}/admin/station-log"] input[name="EarTagRFID"]');
+        const stationCowNameInput = document.getElementById("stationCowName");
+        if (stationRfidInput && stationCowNameInput) {
+          stationRfidInput.addEventListener("input", () => {
+            const cow = cowByRfid[stationRfidInput.value.trim()];
+            if (cow) {
+              stationCowNameInput.value = cow.cowName || cow.visualId;
+            }
+          });
+        }
+        const cowForm = document.getElementById("cow-entry");
+        const cowRfidInput = cowForm?.querySelector('input[name="EarTagRFID"]');
+        if (cowForm && cowRfidInput) {
+          cowRfidInput.addEventListener("input", () => {
+            const cow = cowByRfid[cowRfidInput.value.trim()];
+            if (!cow) return;
+            cowForm.querySelector('input[name="VisualID"]').value = cow.visualId;
+            cowForm.querySelector('input[name="CowName"]').value = cow.cowName;
+            cowForm.querySelector('[name="Breed"]').value = cow.breed;
+            cowForm.querySelector('[name="Status"]').value = cow.status;
+            cowForm.querySelector('input[name="AgeYears"]').value = cow.ageYears;
+            cowForm.querySelector('input[name="WeightKg"]').value = cow.weightKg;
+            cowForm.querySelector('input[name="PhotoURL"]').value = cow.photoUrl;
+          });
+        }
+        const alternateFeedRows = document.getElementById("alternateFeedRows");
+        const addAlternateFeed = document.getElementById("addAlternateFeed");
+        let alternateFeedCount = 0;
+        function addAlternateFeedRow() {
+          if (!alternateFeedRows) return;
+          alternateFeedCount += 1;
+          const row = document.createElement("div");
+          row.className = "grid gap-3 rounded-2xl border border-emerald-800/60 bg-emerald-950/20 p-3 sm:grid-cols-[1fr_1fr_auto]";
+          row.innerHTML = `
+            <label class="block text-sm text-slate-200">
+              Alternate Feed ${alternateFeedCount}
+              <input list="feedTypeOptions" name="FeedType" type="text" placeholder="Alternate feed" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-3 text-slate-200" />
+            </label>
+            <label class="block text-sm text-slate-200">
+              Quantity (kg)
+              <input name="AllocatedAmountKg" type="number" min="0.1" step="0.1" placeholder="5.0" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-950 px-3 py-3 text-slate-200" />
+            </label>
+            <button class="mt-6 rounded-2xl border border-slate-600 px-3 py-2 text-sm font-semibold text-slate-200 transition hover:border-slate-300" type="button">Remove</button>
+          `;
+          row.querySelector("button").addEventListener("click", () => row.remove());
+          alternateFeedRows.appendChild(row);
+        }
+        addAlternateFeed?.addEventListener("click", addAlternateFeedRow);
+      </script>
+    </div>
+  </body>
+</html>
+
+

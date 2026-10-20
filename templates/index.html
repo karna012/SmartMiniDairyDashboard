@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Mini-Dairy Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% include "partials/dairy_theme.html" %}
+  </head>
+  <body class="dashboard-page bg-slate-900 text-slate-100">
+    <div class="min-h-screen px-4 py-6">
+      <header class="mb-6 flex flex-col gap-3 rounded-3xl bg-slate-800/80 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">Smart Mini-Dairy Project</p>
+            <h1 class="text-3xl font-semibold text-white">Dashboard Overview</h1>
+          </div>
+          <div class="flex flex-col items-start gap-2 sm:items-end">
+            <p class="max-w-xl text-slate-300">Responsive livestock monitoring and feed output management for a compact dairy operation.</p>
+            <a href="{{ base_path }}/admin" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Manage data</a>
+          </div>
+          <div class="flex items-center gap-3 ml-4 mt-2 sm:mt-0">
+            <label class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Theme</label>
+            <select id="themeSelect" class="rounded-lg border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-400">
+              <option value="charcoal">Degen Dark</option>
+              <option value="ivory">Light</option>
+            </select>
+          </div>
+        </div>
+      </header>
+      {% if message %}
+      <div class="mb-6 rounded-3xl border border-emerald-500/30 bg-slate-950/80 p-4 text-emerald-200">
+        {{ message }}
+      </div>
+      {% endif %}
+
+      <section class="mb-6 rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+        <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <a href="{{ base_path }}/milk-yield?period=today&group=milked" class="block rounded-3xl border border-cyan-500/20 bg-slate-950/80 p-6">
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Milk Yield Today</p>
+            <p class="mt-3 text-5xl font-semibold text-white">{{ "%.2f"|format(milk_report_summary.total_yield) }} L</p>
+            <p class="mt-2 text-slate-300">{{ milk_report_summary.milked_count }} out of {{ milk_report_summary.total_cows }} cows gave milk</p>
+          </a>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <a href="{{ base_path }}/milk-yield?period=today&group=milked" class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Gave Milk</p>
+              <p class="mt-2 text-3xl font-semibold text-cyan-300">{{ milk_report_summary.milked_count }}</p>
+            </a>
+            <a href="{{ base_path }}/milk-yield?period=today&group=not_milked" class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Not Milked</p>
+              <p class="mt-2 text-3xl font-semibold text-amber-300">{{ milk_report_summary.not_milked_count }}</p>
+            </a>
+            {% for status, count in milk_report_summary.status_counts.items() %}
+            <a href="{{ base_path }}/milk-yield?period=today&group=status:{{ status }}" class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">{{ status }}</p>
+              <p class="mt-2 text-3xl font-semibold text-white">{{ count }}</p>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      {% if feed_reconciliation.has_alert or data_verification_queue %}
+      <section class="mb-6 rounded-3xl border border-amber-500/30 bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+        <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-sm uppercase tracking-[0.3em] text-amber-300">Data Verification</p>
+            <h2 class="text-2xl font-semibold text-white">Feed Upload Review</h2>
+          </div>
+          <a href="{{ base_path }}/admin" class="btn-visible rounded-2xl px-4 py-2 text-sm">Open Admin</a>
+        </div>
+        {% if feed_reconciliation.has_alert %}
+        <div class="mb-4 rounded-2xl border border-amber-500/30 bg-amber-950/20 p-4 text-amber-100">
+          Expected {{ feed_reconciliation.expected_sessions }} feed sessions today; found {{ feed_reconciliation.successful_sessions }}. Deviation: {{ feed_reconciliation.deviation }}.
+        </div>
+        {% endif %}
+        {% if data_verification_queue %}
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-left text-sm text-slate-200">
+            <thead class="border-b border-slate-700 text-slate-400">
+              <tr>
+                <th class="px-3 py-2">Row</th>
+                <th class="px-3 py-2">RFID</th>
+                <th class="px-3 py-2">Timestamp</th>
+                <th class="px-3 py-2">Green Fodder</th>
+                <th class="px-3 py-2">Concentrate</th>
+                <th class="px-3 py-2">Issue</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              {% for row in data_verification_queue %}
+              <tr>
+                <td class="px-3 py-3">{{ row.row_number }}</td>
+                <td class="px-3 py-3">{{ row.ear_tag }}</td>
+                <td class="px-3 py-3">{{ row.timestamp }}</td>
+                <td class="px-3 py-3">{% if row.green_fodder_kg is not none %}{{ "%.2f"|format(row.green_fodder_kg) }} kg{% else %}-{% endif %}</td>
+                <td class="px-3 py-3">{% if row.concentrate_feed_kg is not none %}{{ "%.2f"|format(row.concentrate_feed_kg) }} kg{% else %}-{% endif %}</td>
+                <td class="px-3 py-3 text-amber-200">{{ row.error }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      <main class="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+        <section class="grid gap-6 lg:grid-cols-2">
+          <div class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+            <div class="mb-4 flex items-center justify-between">
+              <div>
+                <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Live Station Monitor</p>
+                <h2 class="text-2xl font-semibold text-white">Real-Time Cards</h2>
+              </div>
+            </div>
+            <div class="grid gap-4 md:grid-cols-2">
+              {% for card in station_cards %}
+              <article id="station-card-{{ card.station }}" class="rounded-3xl border p-5 shadow-lg {% if card.overheat %}border-rose-500 bg-rose-950/15{% else %}border-slate-700 bg-slate-950/70{% endif %}">
+                <div class="mb-3 flex items-center justify-between text-sm uppercase tracking-[0.3em] text-slate-400">
+                  <span>Station {{ card.station }}</span>
+                  <span>{{ card.label }}</span>
+                </div>
+                <div class="space-y-3">
+                  <p class="text-sm text-slate-300">Cow</p>
+                  <p class="station-visual-id text-2xl font-semibold text-white">{{ card.visual_id }}</p>
+                  <p class="station-cow-name text-xs text-slate-400 {% if not card.cow_name %}hidden{% endif %}">{% if card.cow_name %}RFID Name: {{ card.cow_name }}{% endif %}</p>
+                  <div class="rounded-2xl bg-slate-900/80 p-3">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Status</p>
+                    <p class="station-status mt-2 text-xl font-semibold text-cyan-300">{{ card.station_status }}</p>
+                    <p class="station-last-updated mt-1 text-xs text-slate-400">{{ card.last_milked }}</p>
+                  </div>
+                  <div class="grid gap-2 sm:grid-cols-2">
+                    <div class="rounded-2xl bg-slate-900/80 p-3">
+                      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Milk Yield</p>
+                      <p class="station-yield mt-2 text-xl font-semibold text-emerald-300">{{ "%.1f"|format(card.yield) }} kg</p>
+                    </div>
+                    <div class="rounded-2xl bg-slate-900/80 p-3">
+                      <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Temp</p>
+                      <p class="station-temperature mt-2 text-xl font-semibold">{{ "%.1f"|format(card.temperature) }} °C</p>
+                    </div>
+                  </div>
+                  <div class="station-weight-sensor rounded-2xl bg-slate-900/80 p-3 {% if card.sensor_weight is none %}hidden{% endif %}">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Sensor Weight</p>
+                    <p class="station-sensor-weight mt-2 text-xl font-semibold text-emerald-300">{% if card.sensor_weight is not none %}{{ "%.1f"|format(card.sensor_weight) }} kg{% endif %}</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-900/80 p-3">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Feed Served</p>
+                    <p class="station-concentrate-release mt-2 text-xl font-semibold text-cyan-300">{{ "%.2f"|format(card.concentrate_release) }} kg</p>
+                    <p class="station-feed-type mt-1 text-xs text-slate-400">{% if card.feed_type %}{{ card.feed_type }}{% else %}Waiting for upload{% endif %}</p>
+                  </div>
+                </div>
+              </article>
+              {% else %}
+              <div class="rounded-3xl bg-slate-950/80 p-5 text-slate-400 md:col-span-2">
+                No station records uploaded yet.
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+            <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Feed Growing Centre Output</p>
+                <h2 class="text-2xl font-semibold text-white">Inventory Widget</h2>
+              </div>
+              <a href="{{ base_path }}/inventory-history" class="btn-visible rounded-2xl px-5 py-3 text-sm">Inventory History</a>
+            </div>
+            <div class="space-y-4">
+              <div class="rounded-3xl bg-slate-950/80 p-6">
+                <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Dispatched Today</p>
+                <p class="mt-3 text-4xl font-semibold text-emerald-300">{{ "%.2f"|format(feed_summary.total_dispensed) }} kg</p>
+                <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div class="rounded-3xl bg-slate-900/80 p-4 text-slate-200">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Current Stock</p>
+                    <p class="mt-2 text-2xl font-semibold text-white">{{ "%.2f"|format(feed_summary.total_available) }} kg</p>
+                  </div>
+                  <div class="rounded-3xl bg-slate-900/80 p-4 text-slate-200">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Tracked Used</p>
+                    <p class="mt-2 text-2xl font-semibold text-emerald-300">{{ "%.2f"|format(feed_summary.total_tracked_used) }} kg</p>
+                  </div>
+                  <div class="rounded-3xl bg-slate-900/80 p-4 text-slate-200">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Total Remaining</p>
+                    <p class="mt-2 text-2xl font-semibold text-cyan-300">{{ "%.2f"|format(feed_summary.total_remaining) }} kg</p>
+                  </div>
+                </div>
+              <p class="mt-3 text-xs uppercase tracking-[0.3em] text-slate-500">Note: Feed totals come only from manual Feed Centre uploads/output; live station JSON does not update feed stock.</p>
+                {% if feed_summary.untracked_dispatch_rows %}
+                <div class="mt-3 rounded-3xl border border-amber-500/20 bg-amber-950/10 p-4 text-amber-100">
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="text-xs uppercase tracking-[0.3em] text-amber-300">Untracked Dispatch</p>
+                    <a href="{{ base_path }}/inventory-history" class="btn-visible rounded-full px-3 py-1.5 text-xs">Review History</a>
+                  </div>
+                  <p class="mt-2 text-sm text-amber-200">{{ "%.2f"|format(feed_summary.untracked_dispatched) }} kg dispatched from feed types not currently in feed inventory.</p>
+                  <ul class="mt-3 list-disc pl-5 text-sm text-amber-200">
+                    {% for row in feed_summary.untracked_dispatch_rows %}
+                    <li>{{ row.feed_type }}: {{ "%.2f"|format(row.total) }} kg</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
+                {% if feed_summary.inventory_rows %}
+                <div class="mt-4 rounded-3xl bg-slate-900/80 p-4">
+                  <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Feed Type Breakdown</p>
+                  <div class="mt-3 grid gap-2 text-sm text-slate-200 sm:grid-cols-2">
+                    {% for item in feed_summary.inventory_rows %}
+                    <div class="rounded-2xl bg-slate-800/80 p-3">
+                      <p class="font-medium text-white">{{ item.feed_type }}</p>
+                      <p class="mt-1 text-slate-300">Current stock: {{ "%.2f"|format(item.available) }} kg</p>
+                      <p class="text-slate-300">Used: {{ "%.2f"|format(item.used_today) }} kg</p>
+                      <p class="text-slate-400">Remain: {{ "%.2f"|format(item.remaining) }} kg</p>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% endif %}
+                <div class="mt-4 rounded-3xl border border-emerald-500/20 bg-slate-950/80 p-5">
+                  <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">Fodder Status Suggestions</p>
+                  <ul class="mt-3 space-y-3 text-sm text-slate-200">
+                    {% for suggestion in feed_summary.suggestions %}
+                    <li class="rounded-2xl bg-slate-900/80 p-3">
+                      {{ suggestion }}
+                    </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+              <div class="rounded-3xl border border-cyan-500/20 bg-slate-950/80 p-6">
+                <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Milk Collection Target</p>
+                <p class="mt-3 text-4xl font-semibold text-white">{{ "%.2f"|format(milk_summary.total_collected_today) }} kg</p>
+                <div class="mt-4 h-3 overflow-hidden rounded-full bg-slate-800">
+                  <div class="progress-fill h-full rounded-full bg-cyan-400" data-progress-percent="{{ [milk_summary.target_percent, 100]|min }}"></div>
+                </div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div class="rounded-2xl bg-slate-900/80 p-4">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Target</p>
+                    <p class="mt-2 text-xl font-semibold text-white">{{ "%.2f"|format(milk_summary.required_baseline) }} kg</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-900/80 p-4">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Remaining</p>
+                    <p class="mt-2 text-xl font-semibold text-emerald-300">{{ "%.2f"|format(milk_summary.remaining_to_target) }} kg</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-900/80 p-4">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Progress</p>
+                    <p class="mt-2 text-xl font-semibold text-cyan-300">{{ "%.1f"|format(milk_summary.target_percent) }}%</p>
+                  </div>
+                </div>
+                <p class="mt-3 text-xs uppercase tracking-[0.3em] text-slate-500">{{ milk_summary.formula }}</p>
+              </div>
+              <div class="rounded-3xl border border-cyan-500/20 bg-slate-950/80 p-6">
+                <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Cow Drinking Water</p>
+                <p class="mt-3 text-4xl font-semibold text-cyan-300">{{ "%.2f"|format(water_summary.total_water_today) }} L</p>
+                <div class="mt-4 h-3 overflow-hidden rounded-full bg-slate-800">
+                  <div class="progress-fill h-full rounded-full bg-cyan-400" data-progress-percent="{{ [water_summary.target_percent, 100]|min }}"></div>
+                </div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div class="rounded-2xl bg-slate-900/80 p-4">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Baseline</p>
+                    <p class="mt-2 text-xl font-semibold text-white">{{ "%.2f"|format(water_summary.baseline_liters) }} L</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-900/80 p-4">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Remaining</p>
+                    <p class="mt-2 text-xl font-semibold text-emerald-300">{{ "%.2f"|format(water_summary.remaining_liters) }} L</p>
+                  </div>
+                  <div class="rounded-2xl bg-slate-900/80 p-4">
+                    <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Progress</p>
+                    <p class="mt-2 text-xl font-semibold text-cyan-300">{{ "%.1f"|format(water_summary.target_percent) }}%</p>
+                  </div>
+                </div>
+                <p class="mt-3 text-xs uppercase tracking-[0.3em] text-slate-500">{{ water_summary.formula }}</p>
+                <ul class="mt-4 space-y-3 text-sm text-slate-200">
+                  {% for suggestion in water_summary.suggestions %}
+                  <li class="rounded-2xl bg-slate-900/80 p-3">{{ suggestion }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="rounded-3xl border border-slate-700 bg-slate-950/80 p-6">
+                <div class="mb-4 flex items-center justify-between">
+                  <div>
+                    <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Fodder Inventory</p>
+                    <h3 class="text-lg font-semibold text-white">Stock, Used, Remaining</h3>
+                  </div>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="min-w-full text-left text-sm text-slate-200">
+                    <thead class="border-b border-slate-700 text-slate-400">
+                      <tr>
+                        <th class="px-3 py-2">Feed Type</th>
+                        <th class="px-3 py-2">Current Stock (kg)</th>
+                        <th class="px-3 py-2">Used Today (kg)</th>
+                        <th class="px-3 py-2">Remaining (kg)</th>
+                        <th class="px-3 py-2">Note</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+                      {% for item in feed_summary.inventory_rows %}
+                      <tr>
+                        <td class="px-3 py-3 font-medium text-white">{{ item.feed_type }}</td>
+                        <td class="px-3 py-3">{{ "%.2f"|format(item.available) }}</td>
+                        <td class="px-3 py-3">{{ "%.2f"|format(item.used_today) }}</td>
+                        <td class="px-3 py-3">{{ "%.2f"|format(item.remaining) }}</td>
+                        <td class="px-3 py-3 text-slate-400">{{ item.note or '—' }}</td>
+                      </tr>
+                      {% else %}
+                      <tr>
+                        <td class="px-3 py-3 text-slate-400" colspan="5">No feed inventory records available.</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Herd Status Feed</p>
+              <h2 class="text-2xl font-semibold text-white">Herd Overview</h2>
+            </div>
+            <p class="text-sm text-slate-400">Sortable live table with recent 7-day averages.</p>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-700 text-left text-sm text-slate-200">
+              <thead class="bg-slate-900 text-slate-300">
+                <tr>
+                  <th class="px-4 py-3">Photo</th>
+                  <th class="cursor-pointer px-4 py-3" onclick="sortTable(1)">Visual ID</th>
+                  <th class="cursor-pointer px-4 py-3" onclick="sortTable(2)">Name</th>
+                  <th class="cursor-pointer px-4 py-3" onclick="sortTable(3)">Breed</th>
+                  <th class="cursor-pointer px-4 py-3" onclick="sortTable(4)">Age</th>
+                  <th class="cursor-pointer px-4 py-3" onclick="sortTable(5)">Weight</th>
+                  <th class="px-4 py-3">Current Status</th>
+                  <th class="cursor-pointer px-4 py-3" onclick="sortTable(7)">Last 7-Day Avg Yield</th>
+                  <th class="cursor-pointer px-4 py-3" onclick="sortTable(8)">Water Today</th>
+                </tr>
+              </thead>
+              <tbody id="herd-table" class="divide-y divide-slate-700 bg-slate-950/80">
+                {% for row in herd_rows %}
+                <tr>
+                  <td class="px-4 py-3">
+                    <a href="{{ base_path }}/cows/{{ row.EarTagRFID }}" class="inline-flex">
+                    {% if row.photo_url %}
+                    <img src="{{ row.photo_url }}" alt="{{ row.VisualID }}" class="h-10 w-10 rounded-full object-cover" />
+                    {% else %}
+                    <span class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-700 text-xs text-slate-300">No</span>
+                    {% endif %}
+                    </a>
+                  </td>
+                  <td class="px-4 py-3 font-medium text-white">
+                    <a href="{{ base_path }}/cows/{{ row.EarTagRFID }}" class="text-cyan-300 hover:text-cyan-100">{{ row.VisualID }}</a>
+                  </td>
+                  <td class="px-4 py-3">{{ row.CowName }}</td>
+                  <td class="px-4 py-3">{{ row.Breed }}</td>
+                  <td class="px-4 py-3">{% if row.AgeYears is not none %}{{ "%.1f"|format(row.AgeYears) }} yr{% else %}-{% endif %}</td>
+                  <td class="px-4 py-3">{% if row.WeightKg is not none %}{{ "%.1f"|format(row.WeightKg) }} kg{% else %}-{% endif %}</td>
+                  <td class="px-4 py-3">
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {% if row.Status == 'Active' %}bg-emerald-500/20 text-emerald-300{% elif row.Status == 'Treatment' %}bg-orange-500/20 text-orange-300{% else %}bg-slate-700/20 text-slate-200{% endif %}">{{ row.Status }}</span>
+                  </td>
+                  <td class="px-4 py-3">{{ "%.2f"|format(row.avg_yield) }} kg</td>
+                  <td class="px-4 py-3">{{ "%.2f"|format(row.water_today) }} L</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td class="px-4 py-6 text-slate-400" colspan="9">No cow records uploaded yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+    <script>
+      document.querySelectorAll('.progress-fill').forEach((bar) => {
+        const percent = Number.parseFloat(bar.dataset.progressPercent || '0');
+        bar.style.width = `${Math.max(0, Math.min(percent, 100))}%`;
+      });
+
+      async function refreshStationCards() {
+        try {
+          const response = await fetch('/api/station-cards');
+          if (!response.ok) throw new Error('Failed to fetch station cards');
+          const cards = await response.json();
+          cards.forEach(card => {
+            const cardEl = document.getElementById(`station-card-${card.station}`);
+            if (!cardEl) return;
+            cardEl.querySelector('.station-visual-id').textContent = card.visual_id;
+            const cowName = cardEl.querySelector('.station-cow-name');
+            if (cowName) {
+              cowName.textContent = card.cow_name ? `RFID Name: ${card.cow_name}` : '';
+              cowName.classList.toggle('hidden', !card.cow_name);
+            }
+            const stationStatus = cardEl.querySelector('.station-status');
+            if (stationStatus) {
+              stationStatus.textContent = card.station_status || 'Idle';
+            }
+            const lastUpdated = cardEl.querySelector('.station-last-updated');
+            if (lastUpdated) {
+              lastUpdated.textContent = card.last_milked || '';
+            }
+            cardEl.querySelector('.station-yield').textContent = `${card.yield.toFixed(1)} kg`;
+            cardEl.querySelector('.station-temperature').textContent = `${card.temperature.toFixed(1)} °C`;
+            cardEl.querySelector('.station-concentrate-release').textContent = `${card.concentrate_release.toFixed(2)} kg`;
+            const feedType = cardEl.querySelector('.station-feed-type');
+            if (feedType) {
+              feedType.textContent = card.feed_type || 'Waiting for upload';
+            }
+            const weightBlock = cardEl.querySelector('.station-weight-sensor');
+            const weightValue = cardEl.querySelector('.station-sensor-weight');
+            if (card.sensor_weight !== null && card.sensor_weight !== undefined) {
+              weightValue.textContent = `${card.sensor_weight.toFixed(1)} kg`;
+              weightBlock.classList.remove('hidden');
+            } else {
+              weightValue.textContent = '';
+              weightBlock.classList.add('hidden');
+            }
+            if (card.overheat) {
+              cardEl.classList.add('border-rose-500', 'bg-rose-950/15');
+              cardEl.classList.remove('border-slate-700', 'bg-slate-950/70');
+            } else {
+              cardEl.classList.remove('border-rose-500', 'bg-rose-950/15');
+              cardEl.classList.add('border-slate-700', 'bg-slate-950/70');
+            }
+          });
+        } catch (error) {
+          console.error('Station card refresh failed', error);
+        }
+      }
+
+      function sortTable(columnIndex) {
+        const table = document.getElementById('herd-table');
+        const rows = Array.from(table.querySelectorAll('tr'));
+        const isNumeric = columnIndex === 4 || columnIndex === 5 || columnIndex === 7 || columnIndex === 8;
+        const sorted = rows.sort((a, b) => {
+          const aText = a.children[columnIndex].innerText.trim();
+          const bText = b.children[columnIndex].innerText.trim();
+          if (isNumeric) {
+            return parseFloat(aText) - parseFloat(bText);
+          }
+          return aText.localeCompare(bText, undefined, { numeric: true });
+        });
+        sorted.forEach(row => table.appendChild(row));
+      }
+
+      refreshStationCards();
+      setInterval(refreshStationCards, 10000);
+    </script>
+  </body>
+</html>
+
+

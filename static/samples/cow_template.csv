@@ -1,0 +1,4 @@
+EarTagRFID,VisualID,CowName,Breed,AgeYears,WeightKg,Status,PhotoURL,Delete
+100000000000101,COW-101,Lakshmi,Holstein,4.5,430.0,Active,https://example.com/photo101.jpg,
+100000000000102,COW-102,Ganga,Jersey,3.2,365.0,Treatment,https://example.com/photo102.jpg,
+100000000000103,COW-103,Radha,Brown Swiss,5.1,410.0,Dry,https://example.com/photo103.jpg,

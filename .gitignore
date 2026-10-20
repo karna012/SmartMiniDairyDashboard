@@ -1,0 +1,36 @@
+# Private records and generated files: never commit these.
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+*.bak
+*.log
+*.tar.gz
+*.zip
+static/uploads/
+theme_backups/
+backups/
+screenshots/
+.env
+.env.*
+!.env.example
+production.env
+*.pem
+*.key
+credentials*
+secrets*
+
+# Python/tooling
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

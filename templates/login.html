@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login - Smart Mini-Dairy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% include "partials/dairy_theme.html" %}
+  </head>
+  <body class="login-page bg-slate-950 text-slate-100">
+    <div class="flex min-h-screen items-center justify-center px-4 py-12">
+      <div class="w-full max-w-md rounded-3xl bg-slate-900/90 p-8 shadow-2xl shadow-slate-950/40 backdrop-blur">
+        <div class="mb-8 text-center">
+          <p class="text-sm uppercase tracking-[0.3em] text-emerald-300">Admin Access</p>
+          <h1 class="mt-2 text-3xl font-semibold text-white">Smart Mini-Dairy Login</h1>
+          <p class="mt-2 text-sm text-slate-400">Enter the administrator password to manage dashboard data.</p>
+        </div>
+        {% if error %}
+        <div class="mb-4 rounded-2xl border border-rose-500 bg-rose-500/10 p-4 text-sm text-rose-200">{{ error }}</div>
+        {% endif %}
+        <form action="{{ base_path }}/login" method="post" class="space-y-4">
+          <label class="block text-sm font-medium text-slate-300">Password</label>
+          <input name="password" type="password" autocomplete="current-password" class="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-slate-100 outline-none transition focus:border-cyan-400" />
+          <button type="submit" class="btn-visible w-full rounded-2xl px-4 py-3 text-sm">Sign in</button>
+        </form>
+        <div class="mt-6 flex justify-end">
+          <label class="text-[10px] uppercase tracking-[0.3em] text-slate-400 mr-2">Theme</label>
+          <select id="themeSelect" class="rounded-lg border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-400">
+              <option value="charcoal">Degen Dark</option>
+              <option value="ivory">Light</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+

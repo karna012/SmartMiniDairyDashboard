@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ profile.cow_name }} - Cow Profile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% include "partials/dairy_theme.html" %}
+  </head>
+  <body class="dashboard-page bg-slate-900 text-slate-100">
+    <div class="min-h-screen px-4 py-6">
+      <header class="mb-6 rounded-3xl bg-slate-800/80 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div class="flex items-center gap-4">
+            {% if profile.photo_url %}
+            <img src="{{ profile.photo_url }}" alt="{{ profile.cow_name }}" class="h-20 w-20 rounded-full object-cover" />
+            {% else %}
+            <span class="inline-flex h-20 w-20 items-center justify-center rounded-full bg-slate-700 text-sm text-slate-300">No Photo</span>
+            {% endif %}
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Individual Cow Record</p>
+              <h1 class="text-3xl font-semibold text-white">{{ profile.cow_name }}</h1>
+              <p class="mt-1 text-slate-300">{{ profile.visual_id }} | RFID {{ profile.ear_tag }}</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <a href="{{ base_path }}/" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Dashboard</a>
+            <a href="{{ base_path }}/admin" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Admin</a>
+          </div>
+          <div class="flex items-center gap-3 ml-4">
+            <label class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Theme</label>
+            <select id="themeSelect" class="rounded-lg border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-400">
+              <option value="charcoal">Degen Dark</option>
+              <option value="ivory">Light</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <h2 class="mb-4 text-2xl font-semibold text-white">Cow Details</h2>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Breed</p>
+              <p class="mt-2 text-2xl font-semibold text-white">{{ profile.breed }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Age</p>
+              <p class="mt-2 text-2xl font-semibold text-white">{% if profile.age_years is not none %}{{ "%.1f"|format(profile.age_years) }} yr{% else %}-{% endif %}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Weight</p>
+              <p class="mt-2 text-2xl font-semibold text-white">{% if profile.weight_kg is not none %}{{ "%.1f"|format(profile.weight_kg) }} kg{% else %}-{% endif %}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Status</p>
+              <p class="mt-2 text-2xl font-semibold text-emerald-300">{{ profile.status }}</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">7-Day Avg Milk</p>
+              <p class="mt-2 text-2xl font-semibold text-cyan-300">{{ "%.2f"|format(profile.avg_milk_7_day) }} L</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Milk Today</p>
+              <p class="mt-2 text-2xl font-semibold text-cyan-300">{{ "%.2f"|format(profile.total_milk_today) }} L</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Milking Sessions</p>
+              <p class="mt-2 text-2xl font-semibold text-white">{{ profile.sessions_today }} / {{ profile.sessions_expected }}</p>
+              <p class="mt-1 text-sm text-slate-400">{{ profile.sessions_remaining }} remaining today</p>
+            </div>
+            <div class="rounded-2xl bg-slate-950/80 p-4">
+              <p class="text-xs uppercase tracking-[0.3em] text-slate-400">Water Today</p>
+              <p class="mt-2 text-2xl font-semibold text-cyan-300">{{ "%.2f"|format(profile.water_today) }} L</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4">
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Milk Transaction Log</p>
+            <h2 class="text-2xl font-semibold text-white">Date, Time, Station, Amount</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-700 text-left text-sm text-slate-200">
+              <thead class="bg-slate-900 text-slate-300">
+                <tr>
+                  <th class="px-4 py-3">Date</th>
+                  <th class="px-4 py-3">Time</th>
+                  <th class="px-4 py-3">Station</th>
+                  <th class="px-4 py-3">Milk</th>
+                  <th class="px-4 py-3">Temp</th>
+                  <th class="px-4 py-3">Sensor</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700 bg-slate-950/80">
+                {% for item in profile.transactions %}
+                <tr>
+                  <td class="px-4 py-3">{{ item.date }}</td>
+                  <td class="px-4 py-3">{{ item.time }}</td>
+                  <td class="px-4 py-3">Station {{ item.station_id }}</td>
+                  <td class="px-4 py-3 font-semibold text-cyan-300">{{ "%.2f"|format(item.yield) }} L</td>
+                  <td class="px-4 py-3">{{ "%.1f"|format(item.temperature) }} C</td>
+                  <td class="px-4 py-3">{% if item.sensor_weight is not none %}{{ "%.2f"|format(item.sensor_weight) }} kg{% else %}-{% endif %}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td class="px-4 py-3 text-slate-400" colspan="6">No milk transactions recorded for this cow yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4">
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Feed Transaction Log</p>
+            <h2 class="text-2xl font-semibold text-white">Date, Time, Feed Type, Quantity</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-700 text-left text-sm text-slate-200">
+              <thead class="bg-slate-900 text-slate-300">
+                <tr>
+                  <th class="px-4 py-3">Date</th>
+                  <th class="px-4 py-3">Time</th>
+                  <th class="px-4 py-3">Feed Type</th>
+                  <th class="px-4 py-3">Quantity</th>
+                  <th class="px-4 py-3">Source</th>
+                  <th class="px-4 py-3">Note</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700 bg-slate-950/80">
+                {% for item in profile.feed_transactions %}
+                <tr>
+                  <td class="px-4 py-3">{{ item.date }}</td>
+                  <td class="px-4 py-3">{{ item.time or "-" }}</td>
+                  <td class="px-4 py-3">{{ item.feed_type }}</td>
+                  <td class="px-4 py-3 font-semibold text-cyan-300">{{ "%.2f"|format(item.amount) }} kg</td>
+                  <td class="px-4 py-3">{{ item.source or "-" }}</td>
+                  <td class="px-4 py-3">{{ item.note or "-" }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td class="px-4 py-3 text-slate-400" colspan="6">No feed transactions recorded for this cow yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4">
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Water Transaction Log</p>
+            <h2 class="text-2xl font-semibold text-white">Date, Source, Liters, Note</h2>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-700 text-left text-sm text-slate-200">
+              <thead class="bg-slate-900 text-slate-300">
+                <tr>
+                  <th class="px-4 py-3">Date</th>
+                  <th class="px-4 py-3">Source</th>
+                  <th class="px-4 py-3">Water</th>
+                  <th class="px-4 py-3">Note</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-700 bg-slate-950/80">
+                {% for item in profile.water_transactions %}
+                <tr>
+                  <td class="px-4 py-3">{{ item.date }}</td>
+                  <td class="px-4 py-3">{{ item.source or "-" }}</td>
+                  <td class="px-4 py-3 font-semibold text-cyan-300">{{ "%.2f"|format(item.liters) }} L</td>
+                  <td class="px-4 py-3">{{ item.note or "-" }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td class="px-4 py-3 text-slate-400" colspan="4">No water transactions recorded for this cow yet.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
+
+

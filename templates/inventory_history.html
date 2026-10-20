@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Feed Inventory History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% include "partials/dairy_theme.html" %}
+  </head>
+  <body class="dashboard-page bg-slate-900 text-slate-100">
+    <div class="min-h-screen px-4 py-6">
+      <header class="mb-6 rounded-3xl bg-slate-800/80 p-6 shadow-2xl shadow-slate-950/20 backdrop-blur">
+        <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Inventory History</p>
+            <h1 class="text-3xl font-semibold text-white">Feed Use & Remaining Report</h1>
+            <p class="mt-1 text-slate-300">Review daily and range-based feed usage alongside current remaining stock.</p>
+          </div>
+          <div class="flex gap-3">
+            <a href="{{ base_path }}/" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Dashboard</a>
+            <a href="{{ base_path }}/admin" class="btn-visible-soft rounded-full px-4 py-2 text-sm">Admin</a>
+          </div>
+          <div class="flex items-center gap-3 ml-4">
+            <label class="text-[10px] uppercase tracking-[0.3em] text-slate-400">Theme</label>
+            <select id="themeSelect" class="rounded-lg border border-slate-600 bg-slate-800/90 px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-emerald-400">
+              <option value="charcoal">Degen Dark</option>
+              <option value="ivory">Light</option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <main class="grid gap-6">
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Quick Filters</p>
+              <div class="mt-3 flex flex-wrap gap-3">
+                {% for value, label in report.period_options %}
+                <a href="{{ base_path }}/inventory-history?period={{ value }}&start={{ report.start_date }}&end={{ report.end_date }}" class="rounded-2xl px-4 py-2 text-sm font-semibold {% if report.period == value %}btn-visible text-slate-950{% else %}btn-visible-soft text-slate-200{% endif %}">{{ label }}</a>
+                {% endfor %}
+              </div>
+            </div>
+            <form action="{{ base_path }}/inventory-history" method="get" class="rounded-3xl bg-slate-950/80 p-4">
+              <input type="hidden" name="period" value="range" />
+              <div class="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                <label class="block text-sm text-slate-200">
+                  From
+                  <input name="start" type="date" value="{{ report.start_date }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <label class="block text-sm text-slate-200">
+                  To
+                  <input name="end" type="date" value="{{ report.end_date }}" class="mt-1 w-full rounded-2xl border border-slate-700 bg-slate-900 px-3 py-3 text-slate-200" />
+                </label>
+                <button class="btn-visible self-end rounded-2xl px-4 py-3 font-semibold text-slate-950" type="submit">Apply Range</button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-3xl bg-slate-950/80 p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Total Used</p>
+              <p class="mt-3 text-4xl font-semibold text-emerald-300">{{ "%.2f"|format(report.total_used) }} kg</p>
+              <p class="mt-2 text-slate-300">{{ report.start_date }} to {{ report.end_date }}</p>
+            </div>
+            <div class="rounded-3xl bg-slate-950/80 p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Used Today</p>
+              <p class="mt-3 text-4xl font-semibold text-cyan-300">{{ "%.2f"|format(report.used_today) }} kg</p>
+              <p class="mt-2 text-slate-300">Based on current feed dispatch logs.</p>
+            </div>
+            <div class="rounded-3xl bg-slate-950/80 p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Used Yesterday</p>
+              <p class="mt-3 text-4xl font-semibold text-amber-300">{{ "%.2f"|format(report.used_yesterday) }} kg</p>
+              <p class="mt-2 text-slate-300">Yesterday's feed usage.</p>
+            </div>
+            <div class="rounded-3xl bg-slate-950/80 p-6">
+              <p class="text-sm uppercase tracking-[0.3em] text-slate-400">Current Remaining</p>
+              <p class="mt-3 text-4xl font-semibold text-white">{{ "%.2f"|format(report.total_remaining) }} kg</p>
+              <p class="mt-2 text-slate-300">Current tracked inventory across feed types.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Feed Usage Breakdown</p>
+              <h2 class="text-2xl font-semibold text-white">By Feed Type</h2>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm text-slate-200">
+              <thead class="border-b border-slate-700 text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">Feed Type</th>
+                  <th class="px-4 py-3">Used in Range (kg)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 bg-slate-950/80">
+                {% for row in report.summary_rows %}
+                <tr>
+                  <td class="px-4 py-3 font-medium text-white">{{ row.feed_type }}</td>
+                  <td class="px-4 py-3">{{ "%.2f"|format(row.used) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td class="px-4 py-3 text-slate-400" colspan="2">No feed usage found for the selected period.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Daily Usage History</p>
+              <h2 class="text-2xl font-semibold text-white">Day-by-Day Totals</h2>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm text-slate-200">
+              <thead class="border-b border-slate-700 text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">Date</th>
+                  <th class="px-4 py-3">Used (kg)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 bg-slate-950/80">
+                {% for row in report.daily_rows %}
+                <tr>
+                  <td class="px-4 py-3">{{ row.date }}</td>
+                  <td class="px-4 py-3">{{ "%.2f"|format(row.total_used) }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td class="px-4 py-3 text-slate-400" colspan="2">No daily usage records found.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <div class="mb-4 flex items-center justify-between">
+            <div>
+              <p class="text-sm uppercase tracking-[0.3em] text-cyan-300">Current Inventory Status</p>
+              <h2 class="text-2xl font-semibold text-white">Remaining by Feed Type</h2>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm text-slate-200">
+              <thead class="border-b border-slate-700 text-slate-400">
+                <tr>
+                  <th class="px-4 py-3">Feed Type</th>
+                  <th class="px-4 py-3">Stock (kg)</th>
+                  <th class="px-4 py-3">Used Today (kg)</th>
+                  <th class="px-4 py-3">Remaining (kg)</th>
+                  <th class="px-4 py-3">Note</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 bg-slate-950/80">
+                {% for item in report.inventory_rows %}
+                <tr>
+                  <td class="px-4 py-3 font-medium text-white">{{ item.feed_type }}</td>
+                  <td class="px-4 py-3">{{ "%.2f"|format(item.available) }}</td>
+                  <td class="px-4 py-3">{{ "%.2f"|format(item.used_today) }}</td>
+                  <td class="px-4 py-3">{{ "%.2f"|format(item.remaining) }}</td>
+                  <td class="px-4 py-3 text-slate-400">{{ item.note or '—' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                  <td class="px-4 py-3 text-slate-400" colspan="5">No inventory records available.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {% if report.untracked_dispatch_rows %}
+        <section class="rounded-3xl bg-slate-800/90 p-6 shadow-xl shadow-slate-950/20">
+          <p class="text-sm uppercase tracking-[0.3em] text-amber-300">Untracked Dispatch</p>
+          <p class="mt-2 text-slate-300">The following feed types were used but are not currently mapped to inventory items.</p>
+          <div class="mt-4 space-y-2 text-sm text-amber-200">
+            {% for row in report.untracked_dispatch_rows %}
+            <div class="rounded-2xl bg-amber-950/10 p-3">{{ row.feed_type }}: {{ "%.2f"|format(row.total) }} kg</div>
+            {% endfor %}
+          </div>
+        </section>
+        {% endif %}
+      </main>
+    </div>
+  </body>
+</html>
+
+
