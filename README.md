@@ -1,8 +1,13 @@
 # Smart Mini-Dairy Dashboard
 
-Standalone FastAPI dairy-management application, maintained separately from
-Degen Predictions. The deployed application is mounted at
-`https://degenpredictions.com/smartdairy/`.
+**Python · FastAPI · SQL / SQLite · SQLAlchemy · Jinja2**
+
+A dairy-operations dashboard connecting herd records, station activity, milk
+yield and feed inventory in one responsive interface.
+
+Standalone FastAPI application, maintained separately from Degen Predictions.
+The deployed application is mounted at
+[degenpredictions.com/smartdairy/](https://degenpredictions.com/smartdairy/).
 
 This repository contains the deployed application source, routing-aware
 templates, Degen charcoal/emerald theme, import templates and tests. It deliberately
@@ -17,6 +22,19 @@ environment files, or virtual environment.
 - CSV/XLSX imports, sample files and photo-upload support
 - Admin controls and business-rule validation
 - Responsive Degen Dark theme, with an optional light palette
+
+## Explore the implementation
+
+| Area | Implementation |
+| --- | --- |
+| Python API and server-rendered pages | [app.py](app.py) — FastAPI routes, validation, imports and reports |
+| SQL and relational data | [models.py](models.py) — SQLAlchemy models, SQLite queries, indexes and schema maintenance |
+| Domain rules | [Business-rule tests](tests/test_business_rules.py) — milking cycles, feed release and station conflicts |
+| Responsive interface | [Templates](templates) and [theme CSS](static/degen-theme.20261020.css) — dark/light palettes and mobile layouts |
+
+Requests pass through FastAPI to the data and business-rule layer, with SQLite
+for storage and Jinja2 for page rendering. Sample CSV/XLSX files are provided
+under [`static/samples`](static/samples); they are examples, not live records.
 
 ## Local development
 
@@ -66,7 +84,7 @@ check reflects the existing authentication implementation described below.
 
 ## Security status
 
-This is a private source backup, **not a security-hardened release**. Known
+This is a public source showcase, **not a security-hardened release**. Known
 issues in the deployed application remain:
 
 - Admin authentication trusts an unsigned cookie.
@@ -75,6 +93,7 @@ issues in the deployed application remain:
 - The bare `/smartdairy` redirect needs an HTTPS-forwarding correction.
 - The source's default admin password is for development only.
 
-Keep this repository private. Private GitHub visibility does not fix these
-application issues. Protect the running service with an appropriate access
-gateway until authentication and API protection are hardened.
+Public source availability does not imply the application is suitable for
+unrestricted production access. Protect any running instance with an appropriate
+access gateway until authentication and API protection are hardened. Review
+dependencies and configuration before deploying with real records.
