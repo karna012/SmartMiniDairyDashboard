@@ -59,7 +59,7 @@ should only be performed in an empty development checkout.
 
 ## Deployment
 
-Set `DAIRY_BASE_PATH=/smartdairy` when serving under that prefix. The current Pi
+Set `DAIRY_BASE_PATH=/smartdairy` when serving under that prefix. The Linux server
 deployment uses Uvicorn on loopback port 8001 behind nginx and the site's HTTPS
 proxy. Keep the database and uploads on persistent private storage, outside Git.
 Back up SQLite consistently before schema or application changes.
